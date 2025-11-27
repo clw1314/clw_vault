@@ -1,0 +1,119 @@
+log_level = "info"
+server = "[::]:8443"
+data_dir = ""
+udp_relay_ipv6 = true
+zero_rtt_handshake = false
+
+# 监听套接字是否启用双栈模式（同时支持IPv4和IPv6）。
+# 当 server 地址设置为 "[::]" 时，这个选项必须为 true 才能同时接受IPv4和IPv6的连接。
+dual_stack = true
+
+# 客户端认证命令的超时时间。
+# 防止恶意客户端长时间占用连接而不进行认证。
+auth_timeout = "3s"
+
+# 任务协商阶段的最大时长。
+# 防止客户端在协商阶段（如代理请求）卡住。
+task_negotiation_timeout = "3s"
+
+# UDP包分片垃圾回收的间隔时间。
+# 系统会定期清理过期的UDP分片，防止内存泄漏。
+gc_interval = "10s"
+
+# UDP包分片的生命周期。
+# 超过此时长的分片将被视为无效并被清理。
+gc_lifetime = "30s"
+
+# 从外部（上游）UDP套接字接收的最大数据包大小（字节）。
+# 运维建议: 通常可以保持默认值1500，与标准以太网MTU对齐。
+max_external_packet_size = 1500
+
+# TCP和UDP I/O任务的空闲超时时间。
+# 如果一个连接在此时间内没有任何数据传输，将被自动关闭，以释放服务器资源。
+stream_timeout = "60s"
+
+# --- 访问控制列表 (ACL) ---
+# ACL用于定义精细的流量转发规则，决定哪些请求被允许、拒绝或重定向。
+# 注意: 以下两种格式只能选择一种使用。
+
+# 格式1: 数组表格式 (更结构化，适合复杂规则)
+# [[acl]]
+# addr = "127.0.0.1"
+# ports = "udp/53"
+# outbound = "default"
+# hijack = "1.1.1.1"
+#
+# [[acl]]
+# addr = "localhost"
+# outbound = "drop"
+
+# 格式2: 多行字符串格式 (更简洁，适合简单规则)
+# 语法: <出站策略名> <目标地址> [<协议/端口>] [<劫持地址>]
+acl = '''
+# 示例规则:
+# 1. 允许直接连接本地的80和443端口（TCP/UDP）
+direct localhost tcp/80,tcp/443,udp/443
+# 2. 拒绝连接本地的其他所有端口
+drop localhost
+# 3. 将发往 8.8.4.4 的UDP 53端口（DNS请求）的流量，劫持到 1.1.1.1
+default 8.8.4.4 udp/53 1.1.1.1
+'''
+
+# --- 用户管理 ---
+
+[users]
+"71774410-4735-43ce-8a28-57173212e3be" = "T2u3iMnG3g9qCM8FwBoV"
+
+# --- TLS证书配置 ---
+
+[tls]
+# 是否使用自动生成的自签名证书。
+# 运维建议: 仅用于测试。生产环境强烈建议使用由权威CA签发的证书（通过 auto_ssl 或手动配置 certificate/private_key）。
+self_sign = true
+
+# TLS证书文件的路径 (PEM格式)。
+# 如果使用自己的证书，请填写此项。可以是绝对路径或相对于 data_dir 的相对路径。
+certificate = "/etc/tuic/developer.download.nvidia.com.crt"
+
+# TLS私钥文件的路径 (PEM格式)。
+# 与证书文件配对使用。
+private_key = "/etc/tuic/developer.download.nvidia.com.key"
+
+# ALPN (应用层协议协商) 标识。
+# 用于在TLS握手中指定上层协议，例如 "h3" (HTTP/3)。
+# 运维建议: 如果不确定，保持默认空数组即可。
+alpn = ["h3"]
+
+# 用于证书签发或自签名的域名。
+# 当 auto_ssl = true 时，这是申请证书的域名。当 self_sign = true 时，这是自签名证书中的域名。
+hostname = "developer.download.nvidia.com"
+
+# 是否启用内置的ACME功能自动申请和续签SSL证书。
+# 运维建议: 生产环境推荐开启。前提是服务器有公网IP，并且配置的hostname域名已正确解析到该IP。
+auto_ssl = false
+
+# --- RESTful API (可选功能) ---
+# 提供一个API接口，用于动态管理用户或获取服务器状态，适合高级应用场景。
+
+[restful]
+# RESTful API服务器的监听地址和端口。
+# 运维建议: 通常只监听在本地回环地址 "127.0.0.1" 以确保安全。
+addr = "127.0.0.1:28443"
+
+# API认证所需的Bearer Token。
+# 运维建议: 必须修改为一个非常复杂的密钥。
+secret = "T2u3iMnG3g9qCM8FwBoV"
+
+# 限制每个用户UUID同时在线的客户端数量。
+# 0 表示不限制。
+maximum_clients_per_user = 0
+
+
+[outbound]
+# 默认出站策略: 当ACL规则中指定的 outbound 为 "default" 或未指定时使用此规则。
+[outbound.default]
+# 类型: "direct" (直接连接), "socks5" (通过SOCKS5代理连接)。
+type = "direct"
+# IP mode: v4first (prefer IPv4), v6first (prefer IPv6), v4only (IPv4 only), v6only (IPv6 only)
+# Legacy aliases: prefer_v4, prefer_v6, only_v4, only_v6
+ip_mode = "prefer_v4"

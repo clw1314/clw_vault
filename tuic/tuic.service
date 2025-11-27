@@ -1,0 +1,15 @@
+[Unit]
+Description=tuic-server Service
+Documentation=https://github.com
+After=network.target nss-lookup.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/etc/tuic/tuic-server -c /etc/tuic/tuic-config.toml
+Restart=on-failure
+LimitNPROC=512
+LimitNOFILE=infinity
+
+[Install]
+WantedBy=multi-user.target
