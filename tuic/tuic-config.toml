@@ -62,7 +62,7 @@ default 8.8.4.4 udp/53 1.1.1.1
 # --- 用户管理 ---
 
 [users]
-"71774410-4735-43ce-8a28-57173212e3be" = "T2u3iMnG3g9qCM8FwBoV"
+"xxx" = "xxx"
 
 # --- TLS证书配置 ---
 
@@ -73,11 +73,11 @@ self_sign = true
 
 # TLS证书文件的路径 (PEM格式)。
 # 如果使用自己的证书，请填写此项。可以是绝对路径或相对于 data_dir 的相对路径。
-certificate = "/etc/tuic/developer.download.nvidia.com.crt"
+certificate = "xxx"
 
 # TLS私钥文件的路径 (PEM格式)。
 # 与证书文件配对使用。
-private_key = "/etc/tuic/developer.download.nvidia.com.key"
+private_key = "xxx"
 
 # ALPN (应用层协议协商) 标识。
 # 用于在TLS握手中指定上层协议，例如 "h3" (HTTP/3)。
@@ -86,7 +86,7 @@ alpn = ["h3"]
 
 # 用于证书签发或自签名的域名。
 # 当 auto_ssl = true 时，这是申请证书的域名。当 self_sign = true 时，这是自签名证书中的域名。
-hostname = "developer.download.nvidia.com"
+hostname = "xxx"
 
 # 是否启用内置的ACME功能自动申请和续签SSL证书。
 # 运维建议: 生产环境推荐开启。前提是服务器有公网IP，并且配置的hostname域名已正确解析到该IP。
