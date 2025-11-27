@@ -1,0 +1,37 @@
+{
+     https_port 18443
+	order reverse_proxy before route
+	admin off #禁用 admin API。（选配）
+	persist_config off
+	log {
+		output file /var/log/caddy/error.log #错误日志的文件地址
+		format console
+		level ERROR
+	}
+	log log0 {
+		output file /var/log/caddy/access.log #访问日志的文件地址
+		format console
+		include http.log.access.log0
+	} #访问日志的输出配置。（选配）
+
+layer4 {
+   :18443 {
+      @reality tls sni video.fastly.steamstatic.com
+      route @reality {
+        proxy {
+          proxy_protocol v2
+          upstream 127.0.0.1:62100
+            }
+          }
+      @reality2 tls sni video-manager.steamstatic.com
+      route @reality2 {
+        proxy {
+          proxy_protocol v2
+          upstream 127.0.0.1:62101
+            }
+          }
+        }
+      }
+}
+
+ 

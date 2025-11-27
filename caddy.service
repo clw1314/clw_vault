@@ -1,0 +1,17 @@
+[Unit]
+Description=Caddy2
+Documentation=https://github.com/klzgrad
+After=network.target network-online.target
+Requires=network-online.target
+[Service]
+User=root
+Group=root
+ExecStart=/etc/caddy/caddy run --environ --config /etc/caddy/Caddyfile
+ExecReload=/etc/caddy/caddy reload --config /etc/caddy/Caddyfile
+TimeoutStopSec=5s
+PrivateTmp=false
+NoNewPrivileges=yes
+ProtectHome=false
+ProtectSystem=false
+[Install]
+WantedBy=multi-user.target
