@@ -30,6 +30,12 @@ layer4 {
           upstream 127.0.0.1:62101
             }
           }
+      @reality3 tls sni api.onedrive.com
+      route @reality3 {
+        proxy {
+          upstream 127.0.0.1:61666
+            }
+          }
         }
       }
 }
