@@ -1,0 +1,80 @@
+# 这是一个 mtg 配置文件的示例。你可以直接使用它来运行 mtg。
+# 它在所有网络接口上启动代理，使用的密钥是：
+# "ee367a189aee18fa31c190054efd4a8e9573746f726167652e676f6f676c65617069732e636f6d"
+#mtg generate-secret --hex google.com
+# 这里包含了所有可能的配置选项及其默认值。在实际使用中，
+# 你只需要配置你需要修改的部分，其他保持默认即可。
+
+# 调试模式。启用后，程序会输出详细日志。通常只在排查问题时开启。
+debug = true
+
+# 代理密钥。请注意，mtg 只支持 FakeTLS 模式，不支持旧的简单或安全模式。
+# 因此，密钥要么是 base64 编码的，要么以 "ee" 开头。
+secret = ""
+
+# 代理监听的地址和端口。
+bind-to = "127.0.0.1:61666"
+
+# 定义允许的最大并发连接数。超出此限制的连接将被丢弃。
+concurrency = 8192
+
+# （已废弃）TCP 缓冲区大小。由于每个连接涉及两次连接（客户端到代理、代理到服务端），
+# 因此每个连接会使用 tcp-buffer * (4 + 2) 的内存（读写缓冲区 + 数据拷贝缓冲区）。
+# tcp-buffer = "4kb"
+
+# 有时你可能希望强制 mtg 使用特定的 IP 连接方式访问 Telegram。
+# 这里提供了四种模式：
+# - prefer-ipv6: 同时支持 IPv4 和 IPv6，但优先使用 IPv6
+# - prefer-ipv4: 同时支持 IPv4 和 IPv6，但优先使用 IPv4
+# - only-ipv6: 只使用 IPv6 连接
+# - only-ipv4: 只使用 IPv4 连接
+prefer-ip = "prefer-ipv4"
+
+# FakeTLS 使用了域名前置（Domain Fronting）技术，因此需要知道用于连接的端口。
+domain-fronting-port = 443
+
+# FakeTLS 可以通过比较时间戳来防止探测。每个消息都包含加密的时间戳，
+# mtg 通过比较时间戳来决定是否继续连接。
+# tolerate-time-skewness 允许时间偏差，单位可以是 "s"（秒）、"m"（分钟）等。
+tolerate-time-skewness = "10s"
+
+# Telegram 有多个数据中心（DC），用于不同的服务。有时客户端可能会请求未知的 DC。
+# 默认情况下，mtg 会拒绝这样的请求，但你可以通过 allow-fallback-on-unknown-dc 启用
+# 自动切换到其他 DC 的功能。
+allow-fallback-on-unknown-dc = true
+
+# 网络配置部分
+[network]
+# mtg 需要进行外部请求（例如获取本机公网 IP）。从 2.0 版本开始，如果你手动配置了公网 IP，
+# mtg 不会再进行额外的网络请求。
+#
+# mtg 不使用系统默认的 DNS 解析器，而是使用 DNS over HTTPS (DOH)。
+# 这里配置 DOH 服务器的 IP 地址，默认为 Quad9（9.9.9.9）。
+doh-ip = "1.1.1.1"
+# mtg 支持通过代理连接（目前仅支持 SOCKS5）。你可以通过 proxies 配置多个代理。
+# 如果列表为空，则不使用代理；如果配置一个代理，则强制使用该代理；
+# 如果配置多个代理，则 mtg 会在它们之间进行负载均衡。
+#
+# 代理配置使用 URI 格式，例如：
+# socks5://user:password@host:port?open_threshold=5&half_open_timeout=1m&reset_failures_timeout=10s
+proxies = [
+  # "socks5://user:password@host:port?open_threshold=5&half_open_timeout=1m&reset_failures_timeout=10s"
+]
+
+# 网络超时配置
+[network.timeout]
+# tcp 超时：建立 TCP 连接的超时时间。
+tcp = "5s"
+# http 超时：HTTP 请求的超时时间。
+http = "10s"
+# idle 超时：当连接空闲时，维持连接的最大时间。
+idle = "1m"
+
+# 防御配置：抗重放攻击
+[defense.anti-replay]
+# 是否启用抗重放攻击功能。
+enabled = true
+# 缓存大小，表示最多存储多少连接指纹。
+max-size = "1mib"
+# 错误率：使用布隆过滤器控制重复率。
+error-rate = 0.001
