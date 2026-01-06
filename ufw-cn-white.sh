@@ -5,8 +5,8 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 PROTECTED_PORTS=(80 443 8443 18080 18443 62103)
-ASN_WHITELIST=("AS4134" "AS4837" "AS56040" "AS56041" "AS56042" "AS56044" "AS56046" "AS56047" "AS56048")
-ASN_API_BASE="https://asnip.heisemaoyi789.workers.dev"
+ASN_WHITELIST=("45102" "4134" "4837" "56040" "56041" "56042" "56044" "56046" "56047" "56048")
+ASN_API_BASE="https://raw.githubusercontent.com/ipverse/asn-ip/master/as"
 IPSET_NAME_V4="whitelist_v4"
 IPSET_NAME_V6="whitelist_v6"
 TMP_V4_FILE="/tmp/whitelist_v4.txt"
@@ -30,6 +30,7 @@ check_install ufw
 check_install ipset
 check_install curl
 check_install cron
+check_install jq
 
 ufw_status=$(ufw status | grep -i "Status" | awk '{print $2}')
 [ "$ufw_status" != "active" ] && ufw --force enable
@@ -45,11 +46,16 @@ rm -f "$TMP_V4_FILE" "$TMP_V6_FILE"
 touch "$TMP_V4_FILE" "$TMP_V6_FILE"
 
 for asn in "${ASN_WHITELIST[@]}"; do
-    echo "  -> 下载 ${asn}..."
-    curl -sfL "${ASN_API_BASE}/${asn}" >> "$TMP_V4_FILE"
-    echo "" >> "$TMP_V4_FILE"
-    curl -sfL "${ASN_API_BASE}/${asn}?6" >> "$TMP_V6_FILE"
-    echo "" >> "$TMP_V6_FILE"
+    echo "  -> 下载 AS${asn}..."
+    json_data=$(curl -sfL "${ASN_API_BASE}/${asn}/aggregated.json")
+    if [ $? -eq 0 ] && [ -n "$json_data" ]; then
+        # 提取IPv4前缀
+        echo "$json_data" | jq -r '.prefixes.ipv4[]?' 2>/dev/null >> "$TMP_V4_FILE"
+        # 提取IPv6前缀
+        echo "$json_data" | jq -r '.prefixes.ipv6[]?' 2>/dev/null >> "$TMP_V6_FILE"
+    else
+        echo -e "${RED}  [ERROR] 下载 AS${asn} 失败${NC}"
+    fi
 done
 
 ipset list $IPSET_NAME_V4 &>/dev/null && ipset flush $IPSET_NAME_V4 || ipset create $IPSET_NAME_V4 hash:net family inet maxelem 500000
@@ -61,6 +67,8 @@ if [ -s "$TMP_V4_FILE" ]; then
         ipset add $IPSET_NAME_V4 "$ip" 2>/dev/null
     done
     echo -e "${GREEN}[OK] IPv4白名单加载完成${NC}"
+else
+    echo -e "${RED}[WARNING] IPv4白名单为空${NC}"
 fi
 
 if [ -s "$TMP_V6_FILE" ]; then
@@ -69,6 +77,8 @@ if [ -s "$TMP_V6_FILE" ]; then
         ipset add $IPSET_NAME_V6 "$ip" 2>/dev/null
     done
     echo -e "${GREEN}[OK] IPv6白名单加载完成${NC}"
+else
+    echo -e "${RED}[WARNING] IPv6白名单为空${NC}"
 fi
 
 echo -e "${YELLOW}[INFO] 清理旧规则...${NC}"
@@ -76,7 +86,7 @@ for chain_cmd in "iptables ufw-user-input" "ip6tables ufw6-user-input"; do
     cmd=$(echo $chain_cmd | awk '{print $1}')
     chain=$(echo $chain_cmd | awk '{print $2}')
     while true; do
-        line=$($cmd -L $chain -n --line-numbers 2>/dev/null | grep -E "(whitelist_|dpt:(80|443|8443|18443|62103))" | head -1 | awk '{print $1}')
+        line=$($cmd -L $chain -n --line-numbers 2>/dev/null | grep -E "(whitelist_|dpt:(80|443|8443|18080|18443|62103))" | head -1 | awk '{print $1}')
         [ -z "$line" ] && break
         $cmd -D $chain $line 2>/dev/null
     done
@@ -116,19 +126,22 @@ systemctl enable ipset-restore.service >/dev/null 2>&1
 
 cat >"$UPDATE_SCRIPT" <<'UPDATEEOF'
 #!/bin/bash
-ASN_WHITELIST=("AS4134" "AS4837" "AS56040" "AS56041" "AS56042" "AS56044" "AS56046" "AS56047" "AS56048")
-ASN_API_BASE="https://asnip.heisemaoyi789.workers.dev"
+ASN_WHITELIST=("45102" "4134" "4837" "56040" "56041" "56042" "56044" "56046" "56047" "56048")
+ASN_API_BASE="https://raw.githubusercontent.com/ipverse/asn-ip/master/as"
 TMP_V4="/tmp/whitelist_v4.txt"
 TMP_V6="/tmp/whitelist_v6.txt"
 IPSET_V4="whitelist_v4"
 IPSET_V6="whitelist_v6"
 
 rm -f "$TMP_V4" "$TMP_V6"
+touch "$TMP_V4" "$TMP_V6"
+
 for asn in "${ASN_WHITELIST[@]}"; do
-    curl -sfL "${ASN_API_BASE}/${asn}" >> "$TMP_V4"
-    echo "" >> "$TMP_V4"
-    curl -sfL "${ASN_API_BASE}/${asn}?6" >> "$TMP_V6"
-    echo "" >> "$TMP_V6"
+    json_data=$(curl -sfL "${ASN_API_BASE}/${asn}/aggregated.json")
+    if [ $? -eq 0 ] && [ -n "$json_data" ]; then
+        echo "$json_data" | jq -r '.prefixes.ipv4[]?' 2>/dev/null >> "$TMP_V4"
+        echo "$json_data" | jq -r '.prefixes.ipv6[]?' 2>/dev/null >> "$TMP_V6"
+    fi
 done
 
 ipset flush $IPSET_V4
