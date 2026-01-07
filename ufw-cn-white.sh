@@ -11,8 +11,6 @@ IPSET_NAME_V4="whitelist_v4"
 IPSET_NAME_V6="whitelist_v6"
 TMP_V4_FILE="/tmp/whitelist_v4.txt"
 TMP_V6_FILE="/tmp/whitelist_v6.txt"
-UPDATE_SCRIPT="/usr/local/bin/update_firewall_ipsets.sh"
-CRON_JOB="0 4 * * * $UPDATE_SCRIPT >/dev/null 2>&1"
 
 PORTS_DISPLAY=$(IFS=/; echo "${PROTECTED_PORTS[*]}")
 
@@ -29,7 +27,6 @@ check_install() {
 check_install ufw
 check_install ipset
 check_install curl
-check_install cron
 check_install jq
 
 ufw_status=$(ufw status | grep -i "Status" | awk '{print $2}')
@@ -49,9 +46,7 @@ for asn in "${ASN_WHITELIST[@]}"; do
     echo "  -> 下载 AS${asn}..."
     json_data=$(curl -sfL "${ASN_API_BASE}/${asn}/aggregated.json")
     if [ $? -eq 0 ] && [ -n "$json_data" ]; then
-        # 提取IPv4前缀
         echo "$json_data" | jq -r '.prefixes.ipv4[]?' 2>/dev/null >> "$TMP_V4_FILE"
-        # 提取IPv6前缀
         echo "$json_data" | jq -r '.prefixes.ipv6[]?' 2>/dev/null >> "$TMP_V6_FILE"
     else
         echo -e "${RED}  [ERROR] 下载 AS${asn} 失败${NC}"
@@ -123,40 +118,6 @@ WantedBy=multi-user.target
 EOF
 systemctl daemon-reload
 systemctl enable ipset-restore.service >/dev/null 2>&1
-
-cat >"$UPDATE_SCRIPT" <<'UPDATEEOF'
-#!/bin/bash
-ASN_WHITELIST=("45102" "4134" "4837" "56040" "56041" "56042" "56044" "56046" "56047" "56048")
-ASN_API_BASE="https://raw.githubusercontent.com/ipverse/asn-ip/master/as"
-TMP_V4="/tmp/whitelist_v4.txt"
-TMP_V6="/tmp/whitelist_v6.txt"
-IPSET_V4="whitelist_v4"
-IPSET_V6="whitelist_v6"
-
-rm -f "$TMP_V4" "$TMP_V6"
-touch "$TMP_V4" "$TMP_V6"
-
-for asn in "${ASN_WHITELIST[@]}"; do
-    json_data=$(curl -sfL "${ASN_API_BASE}/${asn}/aggregated.json")
-    if [ $? -eq 0 ] && [ -n "$json_data" ]; then
-        echo "$json_data" | jq -r '.prefixes.ipv4[]?' 2>/dev/null >> "$TMP_V4"
-        echo "$json_data" | jq -r '.prefixes.ipv6[]?' 2>/dev/null >> "$TMP_V6"
-    fi
-done
-
-ipset flush $IPSET_V4
-sed -i 's/\r$//' "$TMP_V4"
-grep -v '^\s*$' "$TMP_V4" | sort -u | while read ip; do ipset add $IPSET_V4 "$ip" 2>/dev/null; done
-
-ipset flush $IPSET_V6
-sed -i 's/\r$//' "$TMP_V6"
-grep -v '^\s*$' "$TMP_V6" | sort -u | while read ip; do ipset add $IPSET_V6 "$ip" 2>/dev/null; done
-
-ipset save > /etc/iptables/ipset.rules
-UPDATEEOF
-chmod +x "$UPDATE_SCRIPT"
-
-crontab -l 2>/dev/null | grep -q "$UPDATE_SCRIPT" || (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
 
 echo -e "\n${GREEN}╔═══════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║   ✅ ASN白名单防火墙配置完成              ║${NC}"
