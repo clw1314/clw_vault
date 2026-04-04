@@ -1,5 +1,4 @@
 {
-     https_port 18443
 	order reverse_proxy before route
 	admin off #禁用 admin API。（选配）
 	persist_config off
@@ -16,7 +15,7 @@
 
 layer4 {
    :18443 {
-      @reality tls sni video.fastly.steamstatic.com
+      @reality tls sni wildrift.secure.dyn.riotcdn.net
       route @reality {
         proxy {
           proxy_protocol v2
@@ -30,10 +29,10 @@ layer4 {
           upstream 127.0.0.1:62101
             }
           }
-      @reality3 tls sni api.onedrive.com
+      @reality3 tls sni api.accounts.firefox.com
       route @reality3 {
         proxy {
-          upstream 127.0.0.1:61666
+          upstream 127.0.0.1:61667
             }
           }
         }
