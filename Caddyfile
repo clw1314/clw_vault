@@ -22,13 +22,6 @@ layer4 {
           upstream 127.0.0.1:62100
             }
           }
-      @reality2 tls sni video-manager.steamstatic.com
-      route @reality2 {
-        proxy {
-          proxy_protocol v2
-          upstream 127.0.0.1:62101
-            }
-          }
       @reality3 tls sni api.accounts.firefox.com
       route @reality3 {
         proxy {
