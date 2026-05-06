@@ -22,9 +22,10 @@ layer4 {
           upstream 127.0.0.1:62100
             }
           }
-      @reality3 tls sni api.accounts.firefox.com
-      route @reality3 {
+      @telemt tls sni api.accounts.firefox.com
+      route @telemt {
         proxy {
+		  proxy_protocol v2
           upstream 127.0.0.1:61667
             }
           }
