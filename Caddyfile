@@ -1,42 +1,111 @@
 {
-	order reverse_proxy before route
-	admin off #禁用 admin API。（选配）
+	order authorize before reverse_proxy
+
+	admin off
 	persist_config off
+
 	log {
-		output file /var/log/caddy/error.log #错误日志的文件地址
+		output file /var/log/caddy/error.log {
+			roll_size 10MiB
+			roll_keep 5
+			roll_keep_for 168h
+		}
 		format console
 		level ERROR
 	}
-	log log0 {
-		output file /var/log/caddy/access.log #访问日志的文件地址
-		format console
-		include http.log.access.log0
-	} #访问日志的输出配置。（选配）
 
-layer4 {
-   :18443 {
-      @reality tls sni wildrift.secure.dyn.riotcdn.net
-      route @reality {
-        proxy {
-          proxy_protocol v2
-          upstream 127.0.0.1:62100
-            }
-          }
-      @telemt tls sni api.accounts.firefox.com
-      route @telemt {
-        proxy {
-		  proxy_protocol v2
-          upstream 127.0.0.1:61667
-            }
-          }
-        }
-	udp/:8443 {
-		route {
-			proxy udp/127.0.0.1:62101
-		 }
+	log cf_access {
+		output file /var/log/caddy/cf_access.log {
+			roll_size 10MiB
+			roll_keep 5
+			roll_keep_for 168h
 		}
-      }
-   }
+		format json
+		include http.log.access.cf_access
+	}
+
+	log origin_access {
+		output file /var/log/caddy/origin_access.log {
+			roll_size 10MiB
+			roll_keep 5
+			roll_keep_for 168h
+		}
+		format json
+		include http.log.access.origin_access
+	}
+
+	security {
+		authorization policy openlist_policy {
+			set auth url https://auth.clw259.com/
+			crypto key verify {env.JWT_SHARED_KEY}
+
+			allow roles authp/admin
+
+			acl rule {
+				comment allow admin
+				match role authp/admin
+				allow stop log info
+			}
+
+			acl rule {
+				comment default deny
+				match any
+				deny log warn
+			}
+		}
+	}
+
+	servers {
+		trusted_proxies cloudflare {
+			interval 12h
+			timeout 15s
+		}
+		client_ip_headers Cf-Connecting-Ip X-Forwarded-For
+	}
+
+	layer4 {
+		:18443 {
+			@reality tls sni upos-sz-mirroraliov.bilivideo.com
+			route @reality {
+				proxy {
+					proxy_protocol v2
+					upstream 127.0.0.1:62100
+				}
+			}
+
+			@telemt tls sni api.onedrive.com
+			route @telemt {
+				proxy {
+					proxy_protocol v2
+					upstream 127.0.0.1:61667
+				}
+			}
+		}
+	}
+}
+
+(tls_config) {
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
+}
+
+(security_headers) {
+	header {
+		defer
+		Strict-Transport-Security "max-age=31536000"
+		Content-Security-Policy "default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: data:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https: wss:; frame-src 'self' https:; worker-src 'self' blob:; frame-ancestors 'self'; base-uri 'self'; form-action 'self';"
+    #Content-Security-Policy-Report-Only "default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https: wss:; frame-src 'self' https:; worker-src 'self' blob:; frame-ancestors 'self'; base-uri 'self'; form-action 'self';"
+		X-Frame-Options "SAMEORIGIN"
+		X-Robots-Tag "noindex, nofollow"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+		-Server
+		-X-Powered-By
+	}
+}
 
 
  
