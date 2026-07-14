@@ -2,8 +2,8 @@
   "config": {
     "enable": true,
     "seed": {
-      "browser": 6932840918810623,
-      "global": 290082873409536
+      "browser": 5840846769356800,
+      "global": 92737768521728
     },
     "fp": {
       "navigator": {
@@ -50,25 +50,25 @@
           }
         },
         "canvas": {
-          "type": 4
+          "type": 5
         },
         "audio": {
-          "type": 0
+          "type": 5
         },
         "webgl": {
-          "type": 4
+          "type": 5
         },
         "webrtc": {
-          "type": 0
+          "type": 7
         },
         "font": {
-          "type": 0
+          "type": 5
         },
         "webgpu": {
-          "type": 0
+          "type": 5
         },
         "domRect": {
-          "type": 0
+          "type": 5
         },
         "serviceWorker": {
           "type": 0
@@ -79,7 +79,7 @@
       "fastInject": false
     },
     "input": {
-      "globalSeed": "290082873409536"
+      "globalSeed": "92737768521728"
     },
     "subscribe": {
       "url": "config.json"
@@ -92,8 +92,7 @@
   },
   "policies": {
     "whitelist": [
-      "paypal.com",
-      "cloudflare.com"
+      "paypal.com"
     ],
     "blacklist": [],
     "isBlacklistMode": false
