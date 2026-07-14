@@ -1,0 +1,102 @@
+{
+  "config": {
+    "enable": true,
+    "seed": {
+      "browser": 6932840918810623,
+      "global": 290082873409536
+    },
+    "fp": {
+      "navigator": {
+        "clientHints": {
+          "type": 0
+        },
+        "languages": {
+          "type": 1,
+          "value": [
+            "en-SG",
+            "zh-SG",
+            "en-US",
+            "zh-TW",
+            "zh-HK"
+          ]
+        },
+        "hardwareConcurrency": {
+          "type": 0
+        }
+      },
+      "screen": {
+        "size": {
+          "type": 0
+        },
+        "depth": {
+          "type": 0
+        }
+      },
+      "normal": {
+        "gpuInfo": {
+          "type": 0
+        }
+      },
+      "other": {
+        "timezone": {
+          "type": 1,
+          "value": {
+            "key": "SG",
+            "zone": "Asia/Singapore",
+            "locales": [
+              "en-SG",
+              "zh-SG"
+            ]
+          }
+        },
+        "canvas": {
+          "type": 4
+        },
+        "audio": {
+          "type": 0
+        },
+        "webgl": {
+          "type": 4
+        },
+        "webrtc": {
+          "type": 0
+        },
+        "font": {
+          "type": 0
+        },
+        "webgpu": {
+          "type": 0
+        },
+        "domRect": {
+          "type": 0
+        },
+        "serviceWorker": {
+          "type": 0
+        }
+      }
+    },
+    "action": {
+      "fastInject": false
+    },
+    "input": {
+      "globalSeed": "290082873409536"
+    },
+    "subscribe": {
+      "url": "config.json"
+    },
+    "prefs": {
+      "language": "zh-CN",
+      "theme": "system",
+      "logLevel": "NONE"
+    }
+  },
+  "policies": {
+    "whitelist": [
+      "paypal.com",
+      "cloudflare.com"
+    ],
+    "blacklist": [],
+    "isBlacklistMode": false
+  },
+  "version": "2.8.1"
+}
