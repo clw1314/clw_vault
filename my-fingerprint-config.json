@@ -3,7 +3,7 @@
     "enable": true,
     "seed": {
       "browser": 5840846769356800,
-      "global": 92737768521728
+      "global": 6988634217512959
     },
     "fp": {
       "navigator": {
@@ -26,7 +26,7 @@
       },
       "screen": {
         "size": {
-          "type": 0
+          "type": 5
         },
         "depth": {
           "type": 0
@@ -34,7 +34,12 @@
       },
       "normal": {
         "gpuInfo": {
-          "type": 0
+          "type": 1,
+          "value": {
+            "key": "Intel UHD Graphics 620 D3D11",
+            "vendor": "Google Inc. (Intel)",
+            "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+          }
         }
       },
       "other": {
@@ -76,13 +81,13 @@
       }
     },
     "action": {
-      "fastInject": false
+      "fastInject": true
     },
     "input": {
-      "globalSeed": "92737768521728"
+      "globalSeed": "6988634217512959"
     },
     "subscribe": {
-      "url": "config.json"
+      "url": "https://raw.githubusercontent.com/clw1314/clw_vault/refs/heads/main/my-fingerprint-config.json"
     },
     "prefs": {
       "language": "zh-CN",
@@ -91,9 +96,7 @@
     }
   },
   "policies": {
-    "whitelist": [
-      "paypal.com"
-    ],
+    "whitelist": [],
     "blacklist": [],
     "isBlacklistMode": false
   },
