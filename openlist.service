@@ -1,0 +1,10 @@
+[Unit]
+Description=openlist
+After=network.target
+[Service]
+Type=simple
+WorkingDirectory=/opt/openlist
+ExecStart=/opt/openlist/openlist server
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
